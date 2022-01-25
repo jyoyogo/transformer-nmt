@@ -196,11 +196,12 @@ class NmtDataLoader():
     def __init__(self, train_path, valid_path, exts=('en', 'ko'), batch_size=128, max_length=255, device=-1, 
                  freq_threshold=5, max_vocab=32000, shared_vocab=False, 
                  num_workers=4, shuffle=True, pin_memory=False, dsl=False):
+        print(f'Number of workers : {num_workers}')
+        print(f'pin memory(data transfer speed from cpu to gpu is more faster) : {pin_memory}')
+        
         if train_path is not None and valid_path is not None and exts is not None:
             self.train_set = self._get_corpus(train_path, exts, max_length)
             self.valid_set = self._get_corpus(valid_path, exts, max_length)
-            print(self.train_set['tgt'][:5])
-
 
             ##VOCAB class has been created above
             #Initialize source vocab object and build vocabulary
@@ -260,9 +261,6 @@ if __name__ == '__main__':
                            max_length=50,
                            dsl=False)
 
-    # print(next(iter(loader.train_iter)))
-    # print(next(iter(loader.train_iter))[0][0].size())
-    for batch in loader.train_iter:
-        break
-    print(type(batch[0]))
-    print(type(batch[0][0]))
+    # for batch in loader.train_iter:
+    #     break
+    # print(type(batch[0]))
