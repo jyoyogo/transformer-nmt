@@ -24,11 +24,6 @@ class Attention(nn.Module):
         w = torch.bmm(Q, K.transpose(1, 2))
         # |w| = (batch_size, m, n)
         if mask is not None:
-            if w.size() != mask.size():
-                print(f"Q size : {Q.size()}")
-                print(f"K size : {K.size()}")
-                print(f"w size : {w.size()}")
-                print(f"mask size : {mask.size()}")
             assert w.size() == mask.size()
             w.masked_fill_(mask, -float('inf'))
 
@@ -335,10 +330,7 @@ class Transformer(nn.Module):
             max_length = length
         else:
             raise ValueError('check mask length')
-        print('max length ', max_length)
-        print(x)
-        print(length)
-        print('\n')
+
         for l in length:
             if max_length - l > 0:
                 # If the length is shorter than maximum length among samples,
@@ -367,13 +359,11 @@ class Transformer(nn.Module):
             x = x[0]
 
             mask_enc = mask.unsqueeze(1).expand(*x.size(), mask.size(-1))
-            print('generated mask size : ', mask_enc.size())
             mask_dec = mask.unsqueeze(1).expand(*y.size(), mask.size(-1))
             # |mask_enc| = (batch_size, n, n)
             # |mask_dec| = (batch_size, m, n)
 
         z = self.emb_dropout(self._position_encoding(self.emb_enc(x)))
-        print('encoder block')
         z, _ = self.encoder(z, mask_enc)
         # |z| = (batch_size, n, hidden_size)
 
@@ -385,7 +375,6 @@ class Transformer(nn.Module):
             # |fwd_mask| = (batch_size, m, m)
 
         h = self.emb_dropout(self._position_encoding(self.emb_dec(y)))
-        print('decoder block')
         h, _, _, _, _ = self.decoder(h, z, mask_dec, None, future_mask)
         # |h| = (batch_size, m, hidden_size)
 

@@ -62,17 +62,6 @@ class MaximumLikelihoodEstimationEngine(Engine):
                 engine.optimizer.zero_grad()
 
         mini_batch = engine.data_controller(engine, mini_batch)
-        '''
-        if len(engine.config.gpu_id) == 1:
-            print("GPU # : 1")
-            mini_batch[0] = (mini_batch[0][0].to(engine.device), mini_batch[0][1])
-            mini_batch[1] = (mini_batch[1][0].to(engine.device), mini_batch[1][1])
-        elif len(engine.config.gpu_id.split(',')) > 1 :
-            print(f"GPU # : {len(engine.config.gpu_id.split(','))}")
-            tmp_max_seq = torch.tensor([int(max(mini_batch[0][1]))] * len(mini_batch[0][1]))
-            mini_batch[0] = (mini_batch[0][0].to(engine.device), tmp_max_seq)
-            mini_batch[1] = (mini_batch[1][0].to(engine.device), mini_batch[1][1])
-        '''
 
         # Raw target variable has both BOS and EOS token. 
         # The output of sequence-to-sequence does not have BOS token. 
@@ -85,9 +74,7 @@ class MaximumLikelihoodEstimationEngine(Engine):
             # Take feed-forward
             # Similar as before, the input of decoder does not have EOS token.
             # Thus, remove EOS token for decoder input.
-            print('before inserting model')
-            print(x)
-            print('----------------')
+
             y_hat = engine.model(x, mini_batch[1][0][:, :-1])
             # |y_hat| = (batch_size, length, output_size)
 
