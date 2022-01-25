@@ -193,11 +193,11 @@ class MyCollate:
 #            Define Dataloader Functions
 #######################################################
 class NmtDataLoader():
-    def __init__(self, train_path, valid_path, exts=('en', 'ko'), batch_size=128, max_length=255, device=-1, 
+    def __init__(self, train_path, valid_path, exts=('en', 'ko'), batch_size=128, max_length=255,
                  freq_threshold=5, max_vocab=32000, shared_vocab=False, 
-                 num_workers=4, shuffle=True, pin_memory=False, dsl=False):
+                 num_workers=4, shuffle=True, pin_memory=False):
         print(f'Number of workers : {num_workers}')
-        print(f'pin memory(data transfer speed from cpu to gpu is more faster) : {pin_memory}')
+        print(f'pin memory(data transfer speed is more faster) : {pin_memory}')
         
         if train_path is not None and valid_path is not None and exts is not None:
             self.train_set = self._get_corpus(train_path, exts, max_length)
@@ -224,7 +224,6 @@ class NmtDataLoader():
                                          num_workers=num_workers, pin_memory=pin_memory, 
                                          collate_fn=MyCollate(pad_idx=self.src_vocab.stoi['<PAD>'])) 
             
-            # self.valid_iter = self.get_valid_loader(self.valid_dataset, batch_size, num_workers, shuffle, pin_memory)
         else:
             raise ValueError("Please check train&valid path, and extension tuple of src&tgt")
 
@@ -236,16 +235,17 @@ class NmtDataLoader():
             
         src_path, trg_path = tuple(os.path.expanduser(path + x) for x in exts)
         pair_corpus = {'src' : [], 'tgt' : []}
-
+        
+        num_lines = sum(1 for line in open(src_path,'r'))
         with open(src_path, encoding='utf-8') as src_file, open(trg_path, encoding='utf-8') as trg_file:
-            for src_line, trg_line in tqdm(zip(src_file, trg_file)):
+            for src_line, trg_line in tqdm(zip(src_file, trg_file), desc='Loading data...#', total=num_lines):
                 src_line, trg_line = src_line.strip(), trg_line.strip()
                 if max_length and max_length < max(len(src_line.split()), len(trg_line.split())):
                     continue
                 if src_line != '' and trg_line != '':
                     pair_corpus['src'].append(src_line)
                     pair_corpus['tgt'].append(trg_line)
-                    
+
         return pair_corpus
     
     def load_vocab(self, src_vocab, tgt_vocab):
@@ -257,10 +257,8 @@ if __name__ == '__main__':
                            valid_path='data/sample.valid',
                            exts=('en', 'ko'),
                            batch_size=128,
-                           device=-1,
-                           max_length=50,
-                           dsl=False)
+                           max_length=50)
 
-    # for batch in loader.train_iter:
-    #     break
-    # print(type(batch[0]))
+    for batch in loader.train_iter:
+        break
+    print(type(batch[0]))
