@@ -7,7 +7,7 @@ import torch
 
 from data_loader.nmt_loader import DataLoader
 import data_loader.nmt_loader as data_loader
-from model.transformer import Transformer
+from model.transformers import Transformer
 
 
 def define_argparser():

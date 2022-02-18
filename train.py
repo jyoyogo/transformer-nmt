@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 import pprint
 
@@ -284,7 +285,6 @@ def get_scheduler(optimizer, config):
 
     return lr_scheduler
 
-      
 
 def main(config, model_weight=None, opt_weight=None):
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -308,9 +308,8 @@ def main(config, model_weight=None, opt_weight=None):
         config.valid,                           # Validation file name except extension.
         (config.lang[:2], config.lang[-2:]),    # Source and target language.
         batch_size=config.batch_size,
-        device=-1,                              # Lazy loading
         max_length=config.max_length,           # Loger sequence will be excluded.
-        dsl=False,                              # Turn-off Dual-supervised Learning mode.
+        device=config.gpu_id
     )
 
     input_size, output_size = len(loader.src_vocab), len(loader.tgt_vocab)
@@ -326,7 +325,7 @@ def main(config, model_weight=None, opt_weight=None):
     if torch.cuda.device_count() >= 1:
         print("Let's use", torch.cuda.current_device(), "GPUs!")
         # model.cuda(config.gpu_id)
-        # model.to(device)
+        model.to(device)
         model.cuda()
         crit.cuda()
         model = nn.DataParallel(model, device_ids=list(range(torch.cuda.device_count())))
@@ -378,5 +377,6 @@ def main(config, model_weight=None, opt_weight=None):
 
 
 if __name__ == '__main__':
+    # sys.argv = ['train.py', '--train', './data/sample.train', '--valid', './data/sample.valid', '--lang', 'enko', '--gpu_id', '2', '--batch_size', '128', '--n_epochs', '1', '--verbose', '2', '--max_length', '100', '--dropout', '.2', '--hidden_size', '768', '--n_layers', '4', '--max_grad_norm', '1e+8', '--iteration_per_update', '32', '--lr', '1e-3', '--lr_step', '0', '--use_adam', '--use_transformer', '--rl_n_epochs', '0', '--model_fn', './checkpoint/nmt_model.pth']
     config = define_argparser()
     main(config)
