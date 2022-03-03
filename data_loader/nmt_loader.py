@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 PAD, BOS, EOS = 1, 2, 3
 
+
 def base_tokenizer(text):
     '''
     a simple tokenizer to split on space and converts the sentence to list of words
@@ -13,36 +14,35 @@ def base_tokenizer(text):
 
     return [tok.strip() for tok in text.split(' ')]
 
-def numericalize(text, stoi, device):
+def numericalize(text, stoi, device='cpu'):
     '''
     convert the list of words to a list of corresponding indexes
     '''   
-    #check text type
+    #tokenize text
     if isinstance(text, list):
         pass
     else:
-        ValueError("Text must be list of tokens")
+        text = base_tokenizer(text)
 
     numericalized_text = []
-
     for token in text:
         if token in stoi.keys():
             numericalized_text.append(stoi[token])
-        else:
+        else: 
             #out-of-vocab words are represented by UNK token index
             numericalized_text.append(stoi['<UNK>'])
-            
+
     return torch.tensor(numericalized_text).to(device)
 
-def padding_batch(batch, device='cpu'):
+def padding_batch(batch):
     '''
     padding input sentences when inference
     '''
     if isinstance(batch, list):
-        len_list = torch.tensor([len(s) for s in batch]).to(device)
+        len_list = torch.tensor([len(s) for s in batch])
+        pad_sentences = pad_sequence(batch, batch_first=True, padding_value = PAD)
         # max_len = max(len_list)
-        # pad_sentences = torch.tensor([s + [pad] * (max_len - len(s)) if len(s) < max_len else s for s in batch]).to(device)
-        pad_sentences = pad_sequence(batch,batch_first=True, padding_value = PAD)        
+        # return (torch.tensor([s + [pad] * (max_len - len(s)) if len(s) < max_len else s for s in batch]), len_list)
         return (pad_sentences, len_list)
     else:
         raise TypeError('Check input data type')
@@ -93,6 +93,7 @@ class Vocabulary:
     def __len__(self):
         return len(self.itos)
 
+    
     '''
     build the vocab: create a dictionary mapping of index to string (itos) and string to index (stoi)
     output ex. for stoi -> {'the':5, 'a':6, 'an':7}
@@ -100,6 +101,7 @@ class Vocabulary:
     def build_vocab(self):
         #calculate the frequencies of each word first to remove the words with freq < freq_threshold
         frequencies = {}  #init the freq dict
+        
         
         #calculate freq of words
         for sentence in self.sentence_bucket:
@@ -121,6 +123,7 @@ class Vocabulary:
             self.stoi[word] = self.idx
             self.itos[self.idx] = word
             self.idx+=1
+
     
 class NmtDataset(Dataset):
     '''Create a TranslationDataset given tokenized&bpe corpus.
@@ -176,6 +179,8 @@ class NmtDataset(Dataset):
 #               Collate fn
 #######################################################
 
+
+
 class MyCollate:
     '''
     class to add padding to the batches
@@ -185,6 +190,7 @@ class MyCollate:
     def __init__(self, pad_idx):
         self.pad_idx = pad_idx
         
+    
     #__call__: a default method
     ##   First the obj is created using MyCollate(pad_idx) in data loader
     ##   Then if obj(batch) is called -> __call__ runs by default
@@ -236,8 +242,6 @@ class NmtDataLoader():
                 self.src_vocab = Vocabulary(self.train_set['src'], freq_threshold, max_vocab, tgt=False)
                 self.tgt_vocab = Vocabulary(self.train_set['tgt'], freq_threshold, max_vocab, tgt=True)
 
-            print(f'SRC Vocab Size : {len(list(self.src_vocab.itos))}')
-            print(f'TGT Vocab Size : {len(list(self.tgt_vocab.itos))}')
             self.train_dataset = NmtDataset(self.train_set, self.src_vocab, self.tgt_vocab)
             self.valid_dataset = NmtDataset(self.valid_set, self.src_vocab, self.tgt_vocab)
             
@@ -277,13 +281,12 @@ class NmtDataLoader():
         self.tgt_vocab = tgt_vocab
 
 if __name__ == '__main__':
-    
-    loader = NmtDataLoader(train_path='/home/user/transformer-nmt/data/sample.train', 
-                           valid_path='/home/user/transformer-nmt/data/sample.valid',
+    loader = NmtDataLoader(train_path='data/sample.train', 
+                           valid_path='data/sample.valid',
                            exts=('en', 'ko'),
                            batch_size=128,
-                           max_length=255)
+                           max_length=50)
 
     for batch in loader.train_iter:
         break
-    print(batch[0])
+    print(type(batch[0]))

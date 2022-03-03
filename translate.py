@@ -155,7 +155,7 @@ if __name__ == '__main__':
     model = get_model(input_size, output_size, train_config, saved_data)
 
     # Put models to device if it is necessary.
-    device = 'cuda:%d' % config.gpu_id if config.gpu_id >= 0 else 'cpu'
+    device = 'cuda:%s' % config.gpu_id if int(config.gpu_id) >= 0 else 'cpu'
 
     if config.gpu_id >= 0:
         model.cuda(device)
@@ -180,7 +180,7 @@ if __name__ == '__main__':
             original_indice = [sorted_tuples[i][2] for i in range(len(sorted_tuples))]
             
             numericalized_text = [data_loader.numericalize(s, src_vocab.stoi, device) for s in sorted_lines]
-            x = data_loader.padding_batch(numericalized_text, device)
+            x = data_loader.padding_batch(numericalized_text)
             
             # Converts string to list of index.
             # x = loader.src.numericalize(

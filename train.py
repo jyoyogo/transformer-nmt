@@ -289,7 +289,7 @@ def get_scheduler(optimizer, config):
 def main(config, model_weight=None, opt_weight=None):
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]= config.gpu_id
-
+    device = torch.device(f"cuda" if torch.cuda.is_available() else "cpu")
     print('Count of using GPUs:', torch.cuda.device_count()) 
     print('Current cuda device:', torch.cuda.current_device())
 
