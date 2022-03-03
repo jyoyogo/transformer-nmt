@@ -289,13 +289,9 @@ def get_scheduler(optimizer, config):
 def main(config, model_weight=None, opt_weight=None):
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]= config.gpu_id
-    device = torch.device(f"cuda" if torch.cuda.is_available() else "cpu")
 
-#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#     print('Device:', device)  # 출력결과: cuda 
     print('Count of using GPUs:', torch.cuda.device_count()) 
     print('Current cuda device:', torch.cuda.current_device())
-
 
     def print_config(config):
         pp = pprint.PrettyPrinter(indent=4)
@@ -308,8 +304,10 @@ def main(config, model_weight=None, opt_weight=None):
         config.valid,                           # Validation file name except extension.
         (config.lang[:2], config.lang[-2:]),    # Source and target language.
         batch_size=config.batch_size,
+        freq_threshold=0,
         max_length=config.max_length,           # Loger sequence will be excluded.
-        device=config.gpu_id
+        device=config.gpu_id,
+        shared_vocab=False
     )
 
     input_size, output_size = len(loader.src_vocab), len(loader.tgt_vocab)
@@ -324,16 +322,10 @@ def main(config, model_weight=None, opt_weight=None):
     # if config.gpu_id >= 0:
     if torch.cuda.device_count() >= 1:
         print("Let's use", torch.cuda.current_device(), "GPUs!")
-        # model.cuda(config.gpu_id)
-        model.to(device)
         model.cuda()
         crit.cuda()
-        model = nn.DataParallel(model, device_ids=list(range(torch.cuda.device_count())))
-        # crit.cuda(config.gpu_id)
-        # crit.to(device)
+        # model = nn.DataParallel(model, device_ids=list(range(torch.cuda.device_count())))
         
-
-
     optimizer = get_optimizer(model, config)
 
     if opt_weight is not None and (config.use_adam or config.use_radam):
