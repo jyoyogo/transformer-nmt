@@ -306,7 +306,6 @@ def main(config, model_weight=None, opt_weight=None):
         batch_size=config.batch_size,
         freq_threshold=0,
         max_length=config.max_length,           # Loger sequence will be excluded.
-        device=config.gpu_id,
         shared_vocab=False
     )
 

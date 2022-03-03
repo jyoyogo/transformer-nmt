@@ -216,12 +216,8 @@ class MyCollate:
 class NmtDataLoader():
     def __init__(self, train_path=None, valid_path=None, exts=('en', 'ko'), batch_size=128, max_length=255,
                  freq_threshold=5, max_vocab=32000, shared_vocab=False, 
-                 num_workers=4, shuffle=True, pin_memory=True, device='-1'):
+                 num_workers=4, shuffle=True, pin_memory=True):
 
-        if len(device.split(',')) > 1 and len(device) >= 1 :
-            num_workers = len(device.split(',')) * num_workers
-        else:
-            pass
         print(f'Number of workers : {num_workers}')
         print(f'pin memory(data transfer speed is more faster) : {pin_memory}')
         
