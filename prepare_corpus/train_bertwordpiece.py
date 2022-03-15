@@ -45,7 +45,7 @@ tokenizer = BertWordPieceTokenizer(
 tokenizer.train(
     files,
     vocab_size=args.vocab_size,
-    min_frequency=2,
+    min_frequency=4,
     show_progress=True,
     special_tokens=["[UNK]", "[PAD]"] if args.type == 'src' else ["[UNK]", "[PAD]", "[BOS]", "[EOS]"],
     # special_tokens=["[UNK]", "[PAD]", "[CLS]", "[SEP]", "[MASK]"],
