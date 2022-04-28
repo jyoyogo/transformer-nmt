@@ -3,9 +3,14 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
+from transformers import BertTokenizer
 
 PAD, BOS, EOS = 1, 2, 3
 
+src_vocab_path = '/home/user/transformer-nmt/prepare_corpus/vocab/en.bert-wordpiece-vocab.txt'
+src_tokenizer = BertTokenizer.from_pretrained(src_vocab_path, do_basic_tokenize=True, do_lower_case=False, tokenize_chinese_chars=True, strip_accents=None, never_split=None, model_max_length=512)
+tgt_vocab_path = '/home/user/transformer-nmt/prepare_corpus/vocab/ko.bert-wordpiece-vocab.txt'
+tgt_tokenizer = BertTokenizer.from_pretrained(tgt_vocab_path, do_basic_tokenize=True, do_lower_case=False, tokenize_chinese_chars=True, strip_accents=None, never_split=None, model_max_length=512)
 
 def base_tokenizer(text):
     '''
@@ -13,6 +18,19 @@ def base_tokenizer(text):
     '''
 
     return [tok.strip() for tok in text.split(' ')]
+
+def tokenize(text, use_bert_vocab, tgt=False):
+    '''
+    a simple tokenizer to split on space and converts the sentence to list of words
+    '''
+    # text = ' '.join(mecab.tokenize(text))
+    if use_bert_vocab:
+        if tgt:
+            return tgt_tokenizer.decode(tgt_tokenizer.encode(text)[1:-1]).split(' ')
+        else:
+            return src_tokenizer.decode(src_tokenizer.encode(text)[1:-1]).split(' ')
+    else:
+        return base_tokenizer(text)
 
 def numericalize(text, stoi, device='cpu'):
     '''
@@ -22,15 +40,16 @@ def numericalize(text, stoi, device='cpu'):
     if isinstance(text, list):
         pass
     else:
-        text = base_tokenizer(text)
-
+        text = tokenize(text)
+    
     numericalized_text = []
     for token in text:
         if token in stoi.keys():
             numericalized_text.append(stoi[token])
         else: 
             #out-of-vocab words are represented by UNK token index
-            numericalized_text.append(stoi['<UNK>'])
+            numericalized_text.append(stoi['[UNK]'])
+            # numericalized_text.append(stoi['<UNK>'])
 
     return torch.tensor(numericalized_text).to(device)
 
@@ -64,16 +83,16 @@ class Vocabulary:
         '''
         #initiate the index to token dict
         ## <PAD> -> padding, used for padding the shorter sentences in a batch to match the length of longest sentence in the batch
-        ## <SOS> -> start token, added in front of each sentence to signify the start of sentence
+        ## <BOS> -> start token, added in front of each sentence to signify the start of sentence
         ## <EOS> -> End of sentence token, added to the end of each sentence to signify the end of sentence
         ## <UNK> -> words which are not found in the vocab are replace by this token
         
         if tgt == True:
             print('Target vocab includes BOS and EOS token')
-            self.itos = {0: '<UNK>', 1:'<PAD>', 2:'<BOS>', 3: '<EOS>'}
+            self.itos = {0: '[UNK]', 1:'[PAD]', 2:'[BOS]', 3: '[EOS]'}
             self.idx = 4 #index from which we want our dict to start. We already used 4 indexes for pad, start, end, unk
         else:
-            self.itos = {0: '<UNK>', 1:'<PAD>'}
+            self.itos = {0: '[UNK]', 1:'[PAD]'}
             self.idx = 2
         #initiate the token to index dict
         self.stoi = {k:j for j,k in self.itos.items()} 
@@ -104,8 +123,8 @@ class Vocabulary:
         
         
         #calculate freq of words
-        for sentence in self.sentence_bucket:
-            for word in base_tokenizer(sentence):
+        for tok_sentence in self.sentence_bucket:
+            for word in tok_sentence:
                 if word not in frequencies.keys():
                     frequencies[word]=1
                 else:
@@ -123,7 +142,6 @@ class Vocabulary:
             self.stoi[word] = self.idx
             self.itos[self.idx] = word
             self.idx+=1
-
     
 class NmtDataset(Dataset):
     '''Create a TranslationDataset given tokenized&bpe corpus.
@@ -168,9 +186,9 @@ class NmtDataset(Dataset):
         numerialized_source = []
         numerialized_source += numericalize(source_text, self.src_vocaburary.stoi)
     
-        numerialized_target = [self.tgt_vocaburary.stoi["<BOS>"]]
+        numerialized_target = [self.tgt_vocaburary.stoi["[BOS]"]]
         numerialized_target += numericalize(target_text, self.tgt_vocaburary.stoi)
-        numerialized_target.append(self.tgt_vocaburary.stoi["<EOS>"])
+        numerialized_target.append(self.tgt_vocaburary.stoi["[EOS]"])
         
         #convert the list to tensor and return
         return [torch.tensor(numerialized_source), torch.tensor(numerialized_target)]
@@ -214,17 +232,17 @@ class MyCollate:
 #            Define Dataloader Functions
 #######################################################
 class NmtDataLoader():
-    def __init__(self, train_path=None, valid_path=None, exts=('en', 'ko'), batch_size=128, max_length=255,
+    def __init__(self, train_path=None, valid_path=None, exts=('en', 'ko'), batch_size=128, max_length=512,
                  freq_threshold=5, max_vocab=32000, shared_vocab=False, 
-                 num_workers=4, shuffle=True, pin_memory=True):
+                 num_workers=4, shuffle=True, pin_memory=True, use_bert_vocab=False):
 
         print(f'Number of workers : {num_workers}')
         print(f'pin memory(data transfer speed is more faster) : {pin_memory}')
         
         if train_path is not None and valid_path is not None and exts is not None:
             try:
-                self.train_set = self._get_corpus(train_path, exts, max_length)
-                self.valid_set = self._get_corpus(valid_path, exts, max_length)
+                self.train_set = self._get_corpus(train_path, exts, max_length, use_bert_vocab)
+                self.valid_set = self._get_corpus(valid_path, exts, max_length, use_bert_vocab)
             except Exception as ex:
                 print(ex)
                 raise ValueError("Please check train&valid path, and extension tuple of src&tgt") 
@@ -237,7 +255,7 @@ class NmtDataLoader():
             else:
                 self.src_vocab = Vocabulary(self.train_set['src'], freq_threshold, max_vocab, tgt=False)
                 self.tgt_vocab = Vocabulary(self.train_set['tgt'], freq_threshold, max_vocab, tgt=True)
-
+   
             self.train_dataset = NmtDataset(self.train_set, self.src_vocab, self.tgt_vocab)
             self.valid_dataset = NmtDataset(self.valid_set, self.src_vocab, self.tgt_vocab)
             
@@ -245,14 +263,14 @@ class NmtDataLoader():
             # self.train_iter = self.get_train_loader(self.train_dataset, batch_size, num_workers, shuffle, pin_memory)
             self.train_iter = DataLoader(self.train_dataset, batch_size=batch_size, shuffle=shuffle, 
                                          num_workers=num_workers, pin_memory=pin_memory, #increase num_workers according to CPU 
-                                         collate_fn=MyCollate(pad_idx=self.src_vocab.stoi['<PAD>'])) ##get pad_idx for collate fn, MyCollate class runs __call__ method by default
+                                         collate_fn=MyCollate(pad_idx=self.src_vocab.stoi['[PAD]'])) ##get pad_idx for collate fn, MyCollate class runs __call__ method by default
             self.valid_iter = DataLoader(self.valid_dataset, batch_size=batch_size, shuffle=shuffle, 
                                          num_workers=num_workers, pin_memory=pin_memory, 
-                                         collate_fn=MyCollate(pad_idx=self.src_vocab.stoi['<PAD>']))     
+                                         collate_fn=MyCollate(pad_idx=self.src_vocab.stoi['[PAD]']))     
         else:
             pass
     
-    def _get_corpus(self, path, exts, max_length):
+    def _get_corpus(self, path, exts, max_length, use_bert_vocab):
         #get source and target texts
         if not path.endswith('.'):
             path += '.'
@@ -267,8 +285,8 @@ class NmtDataLoader():
                 if max_length and max_length < max(len(src_line.split()), len(trg_line.split())):
                     continue
                 if src_line != '' and trg_line != '':
-                    pair_corpus['src'].append(src_line)
-                    pair_corpus['tgt'].append(trg_line)
+                    pair_corpus['src'].append(tokenize(src_line, use_bert_vocab, tgt=False))
+                    pair_corpus['tgt'].append(tokenize(trg_line, use_bert_vocab, tgt=True))
 
         return pair_corpus
     
@@ -277,12 +295,13 @@ class NmtDataLoader():
         self.tgt_vocab = tgt_vocab
 
 if __name__ == '__main__':
-    loader = NmtDataLoader(train_path='data/sample.train', 
-                           valid_path='data/sample.valid',
+    loader = NmtDataLoader(train_path='/home/user/transformer-nmt//prepare_corpus/pretokenized_corpus/corpus_sample.test.tok', 
+                           valid_path='/home/user/transformer-nmt//prepare_corpus/pretokenized_corpus/corpus_sample.test.tok',
                            exts=('en', 'ko'),
                            batch_size=128,
-                           max_length=50)
+                           max_length=255,
+                           use_bert_vocab=True)
 
     for batch in loader.train_iter:
         break
-    print(type(batch[0]))
+    print(list(loader.src_vocab.stoi)[:100])

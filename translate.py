@@ -7,7 +7,7 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from model.transformers import Transformer
 
-from data_loader.nmt_loader import NmtDataLoader
+from data_loader.nmt_loader import NmtDataLoader, src_tokenizer, tgt_tokenizer
 import data_loader.nmt_loader as data_loader
 
 def define_argparser():
@@ -75,7 +75,7 @@ def read_text(batch_size=128):
     for line in sys.stdin:
         if line.strip() != '':
             lines += [line.strip().split(' ')]
-
+            
         if len(lines) >= batch_size:
             yield lines
             lines = []
@@ -138,7 +138,8 @@ if __name__ == '__main__':
 
     # Load saved model.
     saved_data = torch.load(
-        config.model_fn
+        config.model_fn,
+        map_location='cpu',
     )
 
     # Load configuration setting in training.
@@ -181,7 +182,7 @@ if __name__ == '__main__':
             
             numericalized_text = [data_loader.numericalize(s, src_vocab.stoi, device) for s in sorted_lines]
             x = data_loader.padding_batch(numericalized_text)
-            
+            # print(x)
             # Converts string to list of index.
             # x = loader.src.numericalize(
             #     loader.src.pad(sorted_lines),
