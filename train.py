@@ -306,7 +306,8 @@ def main(config, model_weight=None, opt_weight=None):
         batch_size=config.batch_size,
         freq_threshold=0,
         max_length=config.max_length,           # Loger sequence will be excluded.
-        shared_vocab=False
+        shared_vocab=False,
+        use_bert_vocab=True
     )
 
     input_size, output_size = len(loader.src_vocab), len(loader.tgt_vocab)
