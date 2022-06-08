@@ -14,8 +14,7 @@ class EnTokenizer(object):
         text_ptr = 0
         is_first_token = True
         tokenized = []
-        with MosesTokenizer('en') as tokenize:
-            # tokenized_text = ' '.join(tokenize(text.strip())).replace("&quot;", '"').replace("&apos;","'").replace("&lt;","<").replace("'&gt;'",">")
+        with MosesTokenizer('en', no_escape=True) as tokenize:
             for token in tokenize(text.strip()):
             # for token in tokenized_text.split(' '):
                 # If space token, increment text_ptr
@@ -37,7 +36,8 @@ class EnTokenizer(object):
                     token = "_" + token
                     is_first_token = False
                 else:
-                    # token = "##" + token
+                    print('yes')
+                    token = "##" + token
                     pass
 
                 tokenized.append(token)

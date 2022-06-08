@@ -5,7 +5,7 @@ from transformers import BasicTokenizer
 
 class MecabTokenizer(object):
     def __init__(self):
-        self.mecab = MeCab.Tagger(f"-r /dev/null -d /home/user/myenv/lib/mecab/dic/mecab-ko-dic")
+        self.mecab = MeCab.Tagger(f"-r /dev/null -d /opt/project/translation/transformer-nmt/transformer_env/lib/mecab/dic/mecab-ko-dic")
         # Split punctuation & Tokenize Chinese Character & Clean Text
         self.basic_tokenizer = BasicTokenizer(do_lower_case=False, tokenize_chinese_chars=True)
 

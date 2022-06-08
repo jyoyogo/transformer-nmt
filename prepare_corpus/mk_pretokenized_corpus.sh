@@ -1,29 +1,24 @@
 #!/bin/bash
-rm -rf ko_corpus/
-rm -rf pretokenized_ko_corpus/
-mkdir ko_corpus
-split -a 4 -l 5000 -d ../data/corpus_sample.train.ko ko_corpus/corpus_sample.train.ko_
-split -a 4 -l 5000 -d ../data/corpus_sample.valid.ko ko_corpus/corpus_sample.valid.ko_
-split -a 4 -l 5000 -d ../data/corpus_sample.test.ko ko_corpus/corpus_sample.test.ko_
-python3 pretokenize.py --tagger mecab --input_dir ko_corpus --output_dir pretokenized_ko_corpus --num_processes 4
-mkdir pretokenized_corpus
-cat pretokenized_ko_corpus/*.train.ko_* > pretokenized_corpus/corpus_sample.train.tok.ko
-cat pretokenized_ko_corpus/*.valid.ko_* > pretokenized_corpus/corpus_sample.valid.tok.ko
-cat pretokenized_ko_corpus/*.test.ko_* > pretokenized_corpus/corpus_sample.test.tok.ko
-rm -rf ko_corpus
-rm -rf pretokenized_ko_corpus
+DATADIR=/opt/project/translation/transformer-nmt/data
+SAVEDIR=/opt/project/translation/transformer-nmt/pretokenized_corpus
+SPLITDIR=ko_split_corpus
+TOKDIR=pretokenized_ko_split_corpus
 
-rm -rf en_corpus/
-rm -rf pretokenized_en_corpus/
-mkdir en_corpus
-split -a 4 -l 5000 -d ../data/corpus_sample.train.en en_corpus/corpus_sample.train.en_
-split -a 4 -l 5000 -d ../data/corpus_sample.valid.en en_corpus/corpus_sample.valid.en_
-split -a 4 -l 5000 -d ../data/corpus_sample.test.en en_corpus/corpus_sample.test.en_
-python3 pretokenize.py --tagger moses --input_dir en_corpus --output_dir pretokenized_en_corpus --num_processes 4
-cat pretokenized_en_corpus/*.train.en_* > pretokenized_corpus/corpus_sample.train.tok.en
-cat pretokenized_en_corpus/*.valid.en_* > pretokenized_corpus/corpus_sample.valid.tok.en
-cat pretokenized_en_corpus/*.test.en_* > pretokenized_corpus/corpus_sample.test.tok.en
-rm -rf en_corpus
-rm -rf pretokenized_en_corpus
+rm -rf ${SAVEDIR}/${SPLITDIR}/
+rm -rf ${SAVEDIR}/${TOKDIR}/
+mkdir ${SAVEDIR}/${SPLITDIR}
+mkdir ${SAVEDIR}/${TOKDIR}
 
-wc -l pretokenized_corpus/*
+split -a 4 -l 5000 -d ${DATADIR}/corpus_sample.train.ko ${SAVEDIR}/${SPLITDIR}/corpus_sample.train.ko_
+split -a 4 -l 5000 -d ${DATADIR}/corpus_sample.valid.ko ${SAVEDIR}/${SPLITDIR}/corpus_sample.valid.ko_
+split -a 4 -l 5000 -d ${DATADIR}/corpus_sample.test.ko ${SAVEDIR}/${SPLITDIR}/corpus_sample.test.ko_
+
+python3 pretokenize.py --tagger mecab --input_dir ${SAVEDIR}/${SPLITDIR} --output_dir ${SAVEDIR}/${TOKDIR} --num_processes 4
+
+cat ${SAVEDIR}/${TOKDIR}/*.train.ko_* > ${SAVEDIR}/corpus_sample.train.tok.ko
+cat ${SAVEDIR}/${TOKDIR}/*.valid.ko_* > ${SAVEDIR}/corpus_sample.valid.tok.ko
+cat ${SAVEDIR}/${TOKDIR}/*.test.ko_* > ${SAVEDIR}/corpus_sample.test.tok.ko
+rm -rf ${SAVEDIR}/${SPLITDIR}
+rm -rf ${SAVEDIR}/${TOKDIR}
+
+wc -l ${SAVEDIR}/${DESTDIR}/*
