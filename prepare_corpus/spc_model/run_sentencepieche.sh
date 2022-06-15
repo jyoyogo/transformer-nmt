@@ -1,0 +1,16 @@
+SPM=/opt/project/translation/transformer-nmt/sentencepiece/build/src/spm_encode
+EN_MODEL=/opt/project/translation/transformer-nmt/prepare_corpus/spc_model/en.bpe.model
+KO_MODEL=/opt/project/translation/transformer-nmt/prepare_corpus/spc_model/ko.bpe.model
+DATA=/opt/project/translation/transformer-nmt/pretokenized_corpus
+SPM_DATA=/opt/project/translation/transformer-nmt/spm_corpus
+TRAIN=train
+VALID=valid
+TEST=test
+SRC=en
+TGT=ko
+${SPM} --model=${EN_MODEL} < ${DATA}/corpus_sample.${TRAIN}.tok.${SRC} > ${SPM_DATA}/${TRAIN}.spm.${SRC} &
+${SPM} --model=${KO_MODEL} < ${DATA}/corpus_sample.${TRAIN}.tok.${TGT} > ${SPM_DATA}/${TRAIN}.spm.${TGT} &
+${SPM} --model=${EN_MODEL} < ${DATA}/corpus_sample.${VALID}.tok.${SRC} > ${SPM_DATA}/${VALID}.spm.${SRC} &
+${SPM} --model=${KO_MODEL} < ${DATA}/corpus_sample.${VALID}.tok.${TGT} > ${SPM_DATA}/${VALID}.spm.${TGT} &
+${SPM} --model=${EN_MODEL} < ${DATA}/corpus_sample.${TEST}.tok.${SRC} > ${SPM_DATA}/${TEST}.spm.${SRC} &
+${SPM} --model=${KO_MODEL} < ${DATA}/corpus_sample.${TEST}.tok.${TGT} > ${SPM_DATA}/${TEST}.spm.${TGT} &
