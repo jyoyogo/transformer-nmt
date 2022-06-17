@@ -1,3 +1,4 @@
+python train_sentencepiece.py
 SPM=/opt/project/translation/transformer-nmt/sentencepiece/build/src/spm_encode
 EN_MODEL=/opt/project/translation/transformer-nmt/prepare_corpus/spc_model/en.bpe.model
 KO_MODEL=/opt/project/translation/transformer-nmt/prepare_corpus/spc_model/ko.bpe.model
