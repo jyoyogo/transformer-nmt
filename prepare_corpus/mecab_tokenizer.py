@@ -18,7 +18,7 @@ class MecabTokenizer(object):
         for morph in self.mecab.parse(text).split("\n"):
             if "\t" in morph:
                 token = morph.split("\t")[0]
-
+                
                 # If space token, increment text_ptr
                 if text[text_ptr] == " ":
                     while text[text_ptr] == " ":
@@ -28,12 +28,12 @@ class MecabTokenizer(object):
                 text_ptr += len(token)
 
                 if is_first_token:
-                    token = "_" + token
+                    token = "▁" + token
                     is_first_token = False
                 else:
-                    # token = "##" + token
+                    #token = "_" + token
                     pass
-
+                
                 tokenized.append(token)
         return tokenized
 

@@ -16,38 +16,37 @@ class EnTokenizer(object):
         tokenized = []
         with MosesTokenizer('en', no_escape=True) as tokenize:
             for token in tokenize(text.strip()):
-            # for token in tokenized_text.split(' '):
+                
                 # If space token, increment text_ptr
                 # try:
                 if text[text_ptr] == " ":
                     while text[text_ptr] == " ":
                         text_ptr += 1
                     is_first_token = True  # Reset that it is first token
-                
+                '''
                 if token == text[text_ptr:text_ptr+len(token)]:
                     pass
                 else:
                     #cover html and xml special char, as like &quot;, &apos; , etc...
                     token = text[text_ptr:text_ptr+len(token)].split(' ')[0]
-
+                '''
                 text_ptr += len(token)
 
                 if is_first_token:
-                    token = "_" + token
+                    token = "▁" + token
                     is_first_token = False
                 else:
-                    print('yes')
-                    token = "##" + token
+                    #token = "##" + token
                     pass
-
+                
                 tokenized.append(token)
 
         return tokenized
 
 if __name__ == "__main__":
     tokenizer = EnTokenizer()
-    # text = "How can Company A and B get relief for damages caused by A's breach of obligations?"
-    # print(tokenizer.tokenize(text))
+    #text = "How can Company A and B get relief for damages caused by A's breach of obligations?"
+    #print(tokenizer.tokenize(text))
     for line in fileinput.input():
         if line.strip() != "":
             tokens = tokenizer.tokenize(line.strip())
