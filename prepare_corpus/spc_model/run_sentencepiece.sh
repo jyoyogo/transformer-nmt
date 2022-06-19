@@ -1,9 +1,11 @@
-python train_sentencepiece.py
-SPM=/opt/project/translation/transformer-nmt/sentencepiece/build/src/spm_encode
-EN_MODEL=/opt/project/translation/transformer-nmt/prepare_corpus/spc_model/en.bpe.model
-KO_MODEL=/opt/project/translation/transformer-nmt/prepare_corpus/spc_model/ko.bpe.model
-DATA=/opt/project/translation/transformer-nmt/pretokenized_corpus
-SPM_DATA=/opt/project/translation/transformer-nmt/spm_corpus
+BASE=/opt/project/translation/transformer-nmt
+DATA=${BASE}/pretokenized_corpus
+FILE=corpus_sample.train.tok
+python train_sentencepiece.py --path ${DATA} --file ${FILE}
+SPM=${BASE}/sentencepiece/build/src/spm_encode
+EN_MODEL=${BASE}/prepare_corpus/spc_model/en.bpe.model
+KO_MODEL=${BASE}/prepare_corpus/spc_model/ko.bpe.model
+SPM_DATA=${BASE}/spm_pretok_corpus
 TRAIN=train
 VALID=valid
 TEST=test
