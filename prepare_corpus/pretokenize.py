@@ -4,7 +4,7 @@ import os
 import time
 
 from mecab_tokenizer import MecabTokenizer
-from moses_tokenizer import EnTokenizer
+from nltk_tokenizer import EnTokenizer
 
 def pretokenize(job_id: int, args: argparse.Namespace):
     def log(*args):
@@ -12,7 +12,7 @@ def pretokenize(job_id: int, args: argparse.Namespace):
         print("Job {}:".format(job_id), msg)
     if args.tagger == 'mecab':
         tokenizer = MecabTokenizer()  # one tokenizer for one process
-    elif args.tagger == 'moses':
+    elif args.tagger == 'nltk':
         tokenizer = EnTokenizer()
         
     log("Pretokenize corpus!")
@@ -37,7 +37,7 @@ def pretokenize(job_id: int, args: argparse.Namespace):
         with open(os.path.join(args.input_dir, fname), "r", encoding="utf-8") as f_r:
             with open(os.path.join(args.output_dir, fname), "w", encoding="utf-8") as f_w:
                 for line in f_r:
-                    f_w.write(" ".join(tokenizer.tokenize(line.strip())))
+                    f_w.write("".join(tokenizer.tokenize(line.strip())))
                     f_w.write("\n")
 
 
@@ -75,4 +75,3 @@ if __name__ == "__main__":
             job.start()
         for job in jobs:
             job.join()
-
